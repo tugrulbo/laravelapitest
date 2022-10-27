@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -13,9 +14,23 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        #return response()->json(Product::all(),200);
+        #return response(Product::paginate(10),200);
+
+        $offset = $request->has('offset') ? $request->query('offset'):0;
+        $limit = $request->has('limit') ? $request->query('limit'):10;
+        
+        $queryBuilder = User::query();
+        if($request->has('q'))
+            $queryBuilder->where('name','like','%'.$request->query('q').'%');
+        
+        if($request->has('sortBy'))
+            $queryBuilder->orderBy($request->query('sortBy'),$request->query('sort','DESC'));
+
+        $data = $queryBuilder->offset($offset)->limit($limit)->get();
+        return response($data,200);
     }
 
     /**
@@ -26,7 +41,18 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $user = new User;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->email_verified_at = now();
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return response([
+            'data'=> $user,
+            'message' =>"User created."
+
+        ],201);
     }
 
     /**
@@ -35,9 +61,14 @@ class UserController extends Controller
      * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
+    public function show($id)
     {
-        //
+        $user = User::find($id);
+        if($user){
+            return response($user,200);
+        }else{
+            return response(['message'=>'User Not Found'],404);
+        }
     }
 
     /**
@@ -49,7 +80,17 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        //
+        $user = new User;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = $request->password;
+        $user->save();
+
+        return response([
+            'data'=> $user,
+            'message' =>"User updated."
+
+        ],200);
     }
 
     /**
@@ -60,6 +101,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return response([
+            'message' =>"User deleted."
+
+        ],200);
     }
 }
