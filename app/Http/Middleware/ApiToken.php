@@ -41,7 +41,7 @@ class ApiToken
 
         }
         return response()->json([
-            'message' => 'Invalid Bearer Token'
+            'message' => 'Not A Valid Bearer Token'
         ], 401);
     }
 }
